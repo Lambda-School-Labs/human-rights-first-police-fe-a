@@ -6,6 +6,12 @@ import styled from 'styled-components';
 import { nanoid } from 'nanoid';
 import { mapActions } from '../../../store';
 import useIncidentFilter from '../../../hooks/useIncidentFilter';
+import {
+  getLatAndLong,
+  putIncidents,
+} from '../../../utils/DashboardHelperFunctions.js';
+import useOktaAxios from '../../../hooks/useOktaAxios';
+
 const { setFocusCluster } = mapActions;
 
 const ClusterMarker = styled.div`
@@ -26,9 +32,35 @@ const LEAVES_LIMIT = 1000000; // Max # of incidents to display in IncidentFocus
 
 export default function Clusters({ zoomOnCluster }) {
   const dispatch = useDispatch();
+  const oktaAxios = useOktaAxios();
   const incident = useSelector(state => state.incident);
   const incidents = useIncidentFilter();
-  const points = incidents.map(id => incident.data[id].geoJSON);
+  const points = incidents.map(id => {
+    /*
+    Where should this conditional be taking place?
+    
+    if (
+      incident.data[id].city != null &&
+      incident.data[id].state != null &&
+      (incident.data[id].lat === null || incident.data[id].long == null)
+      ) {
+        const updateIncident = { ...incident.data[id] };
+        
+        getLatAndLong(updateIncident)
+        .then(res => {
+          updateIncident.lat = res[0];
+          updateIncident.long = res[1];
+        })
+        .catch(err => console.log('err: ', err));
+        
+        // create new put request for updating incident of id x
+        // what endpoint should I be using?
+        // ?? putIncidents(oktaAxios, [updateIncident], updateIncident.status);
+      }
+
+      */
+    return incident.data[id].geoJSON;
+  });
 
   // See for supercluster usage and config: https://github.com/mapbox/supercluster
   const supercluster = useMemo(() => {
