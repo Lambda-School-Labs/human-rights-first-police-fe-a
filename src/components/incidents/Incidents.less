@@ -11,20 +11,6 @@
   text-align: flex-start;
 }
 
-.export-form {
-  text-align: left;
-  padding: 2rem;
-  background-color:#C1D2E9;
-}
-
-.export-form .ant-select {
-  width: 278px;
-}
-
-.ant-picker {
-  margin-bottom: 1rem;
-}
-
 .incidents-container {
   width: 98%;
   margin: auto;
@@ -35,25 +21,28 @@
   flex-flow: row;
   justify-content: space-between;
 }
+
+.incidents-collapse {
+  border: 0 !important;
+  .panel {
+    background: white;
+    & > .ant-collapse-content {
+      background: #c1d2e9;
+    }
+  }
+}
+
 #title-text {
-  margin-top: 0.11rem;
-  margin-left: 1.5rem;
   font-size: 1rem;
   color: #000;
 }
 .incidents-page header .user-input {
   display: -webkit-box;
   display: -ms-flexbox;
- 
   -webkit-box-pack: justify;
   -ms-flex-pack: justify;
   justify-content: space-between;
 }
-
-.collapse-content-p {
-  color: black;
-}
-
 .extra {
   display: flex;
   flex-flow: row;

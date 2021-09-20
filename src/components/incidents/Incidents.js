@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './Incidents.css';
+import './Incidents.less';
 import sourceListHelper from '../../utils/sourceListHelper';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import {
@@ -9,27 +9,19 @@ import {
   createRange,
   filterByTags,
 } from '../incidents/IncidentFilter';
+import FilterForm from './FilterForm';
 import { nanoid } from 'nanoid';
 import { useSelector } from 'react-redux';
-import { Empty, Button, Collapse, Tag, Checkbox, Popover, Select } from 'antd';
+import { Empty, Button, Collapse, Tag, Checkbox, Popover } from 'antd';
 
 // Time Imports
 import { DateTime } from 'luxon';
 
-// Search Bar
-import SearchBar from '../graphs/searchbar/SearchBar';
-
 // Ant Design Imports:
-import { AutoComplete, Pagination, DatePicker } from 'antd';
+import { Pagination } from 'antd';
 import { CSVLink } from 'react-csv'; // helper for export CSV from current State
-import { ConsoleSqlOutlined } from '@ant-design/icons';
 
-let ranks = ['Rank 1', 'Rank 2', 'Rank 3', 'Rank 4', 'Rank 5'];
-
-const { RangePicker } = DatePicker;
 const { Panel } = Collapse;
-const { Option } = Select;
-const { CheckableTag } = Tag;
 
 const Incidents = () => {
   const [itemsPerPage] = useState(10);
@@ -39,23 +31,17 @@ const Incidents = () => {
   const [usState, setUsState] = useState(null);
   const [dates, setDates] = useState(null);
   const [data, setData] = useState([]); // State for User Searches
-  const [selectedTags, setSelectedTags] = useState(['All']);
-  const [queryString, setQueryString] = useState('');
   const [selectedIncidents, setSelectedIncidents] = useLocalStorage(
     'marked',
     []
   ); // all marked incidents saved in local storage
   const [added, setAdded] = useState([]); // data where all checked cases stored(from checkboxes)
-  const [rank, setRank] = useState('All');
+  const [rank, setRank] = useState('');
 
   // Get incident data from Redux
   const incidents = useSelector(state => Object.values(state.incident.data));
   const tagIndex = useSelector(state => Object.keys(state.incident.tagIndex));
-  const fetchStatus = useSelector(
-    state => state.api.incidents.getincidents.status
-  );
 
-  const [value, setValue] = useState('');
   const [activeCategories, setActiveCategories] = useState([]);
 
   const categoriesData = [];
@@ -81,9 +67,9 @@ const Incidents = () => {
     return (
       <div className="header-top">
         <div className="title-container">
-          {/* title-text is used instead of title since ant design form items
-           * with name="title" get the id "title" from ant design, so there's
-           * some namespace clashes in the css */}
+          {/* title-text is used on the p element below instead of title since
+           * ant design form items with name="title" get the id "title" from ant
+           * design, so there's some namespace clashes in the css */}
           <p id="title-text">{incident.title}</p>
         </div>
         <div className="extra">
@@ -120,24 +106,18 @@ const Incidents = () => {
   useEffect(() => {
     const range = dates && createRange(dates);
     let filtered = [...incidents];
-    if (
-      activeCategories.length !== 0 &&
-      activeCategories.indexOf('All') === -1
-    ) {
+    if (activeCategories.length !== 0) {
       filtered = filterByTags(filtered, activeCategories);
     }
     if (usState) {
       filtered = filterDataByState(filtered, usState);
     }
     if (dates) {
-      const startDate = `${dates[0].c.year}-${dates[0].c.month}-${dates[0].c.day}`;
-      const endDate = `${dates[1].c.year}-${dates[1].c.month}-${dates[1].c.day}`;
-      setQueryString(`&state=${usState}&start=${startDate}&end=${endDate}`);
       filtered = filterDataByDate(filtered, range);
     }
-    if (rank !== 'All') {
+    if (rank !== '') {
       filtered = filtered.filter(incident => {
-        return incident.force_rank.trim() === ranks[parseInt(rank) - 1].trim();
+        return incident.force_rank === rank;
       });
     }
     setData(falsiesRemoved(filtered));
@@ -162,21 +142,6 @@ const Incidents = () => {
 
   const onChange = page => {
     setCurrentPage(page);
-  };
-
-  const onToggle = (tag, checked) => {
-    let nextSelectedTags = checked
-      ? [...activeCategories, tag]
-      : activeCategories.filter(t => t !== tag || t === 'All');
-    if (tag === 'All') {
-      setActiveCategories([]);
-      return;
-    }
-    if (nextSelectedTags[0] === 'All') {
-      setActiveCategories(nextSelectedTags.slice(1));
-      return;
-    }
-    setActiveCategories(nextSelectedTags);
   };
 
   const onRank = e => {
@@ -238,10 +203,19 @@ const Incidents = () => {
     setSelectedIncidents([]);
   };
 
-  const onDateSelection = (dates, dateStrings) => {
+  const onDateSelection = dates => {
+    let formattedDates;
+    if (dates === null) {
+      formattedDates = [];
+    } else {
+      formattedDates = dates.map(date => date.format('YYYY-MM-DD'));
+    }
     setDates(
-      dateStrings[0] && dateStrings[1]
-        ? [DateTime.fromISO(dateStrings[0]), DateTime.fromISO(dateStrings[1])]
+      formattedDates[0] && formattedDates[1]
+        ? [
+            DateTime.fromISO(formattedDates[0]),
+            DateTime.fromISO(formattedDates[1]),
+          ]
         : null
     );
   };
@@ -265,95 +239,22 @@ const Incidents = () => {
     );
   };
 
-  const onCategoryChange = data => {
-    setValue(data);
-  };
-  const onCategorySelect = data => {
-    if (activeCategories.includes(data)) {
-      setValue('');
-      return;
-    } else {
-      setActiveCategories([...activeCategories, data]);
-      setValue('');
-    }
-  };
-  const filterOption = (inputValue, option) => {
-    return inputValue.slice(0, inputValue.length).toLowerCase() ===
-      option.value.slice(0, inputValue.length).toLowerCase()
-      ? option
-      : null;
+  const onFilterChange = (key, val) => {
+    // TODO make filtering by city work, ideally by changing the filtering system to
+    // work on the entire form data instead of one value at a time
+    const changeFns = {
+      force_rank: onRank,
+      state: setUsState,
+      tags: setActiveCategories,
+      date_range: onDateSelection,
+    };
+    changeFns[key](val);
   };
 
   return (
     <div className="incident-reports-page">
       <div className="form-container">
-        <h1>Filter Incident Reports</h1>
-        <form className="export-form">
-          <label htmlFor="ranks" className="labels">
-            Rank
-            <br></br>
-            <Select
-              onChange={onRank}
-              showSearch
-              defaultValue="All"
-              className="form-inputs"
-              id="ranks"
-              value={rank}
-            >
-              <Option value="All">All</Option>
-              <Option value="1">Rank: 1</Option>
-              <Option value="2">Rank: 2</Option>
-              <Option value="3">Rank: 3</Option>
-              <Option value="4">Rank: 4</Option>
-              <Option value="5">Rank: 5</Option>
-            </Select>
-          </label>
-          <label htmlFor="locations" className="labels">
-            Location
-            <br></br>
-            <SearchBar className="form-inputs" setUsState={setUsState} />{' '}
-          </label>
-          <label htmlFor="categories" className="labels">
-            Category
-            <br></br>
-            <AutoComplete
-              value={value}
-              options={categoriesData}
-              onSelect={onCategorySelect}
-              onChange={onCategoryChange}
-              allowClear={true}
-              filterOption={filterOption}
-              placeholder="Browse Categories"
-              notFoundContent="Category Not Found"
-              id="categories"
-              className="form-inputs"
-            />
-            {activeCategories &&
-              activeCategories.map(tag => {
-                return (
-                  <CheckableTag
-                    style={{
-                      marginTop: 3,
-                      backgroundColor: '#003767',
-                    }}
-                    key={tag}
-                    checked={activeCategories.indexOf(tag) > -1}
-                    onChange={checked => onToggle(tag, checked)}
-                  >
-                    {tag}
-                  </CheckableTag>
-                );
-              })}
-          </label>
-          <label htmlFor="dates" className="labels">
-            Date
-            <br></br>
-            <RangePicker
-              onCalendarChange={onDateSelection}
-              className="form-inputs"
-            />
-          </label>
-        </form>
+        <FilterForm onValuesChange={onFilterChange} />
         <div className="buttonbutton">
           <div className="export-button">
             <div className="list-items-count">
@@ -408,7 +309,7 @@ const Incidents = () => {
       <div className="incidents-container">
         <h1>Report Results</h1>
         {data.length ? (
-          <Collapse key={nanoid()} className="collapse">
+          <Collapse key={nanoid()} className="incidents-collapse">
             {currentPosts.map(incident => {
               return (
                 <Panel
@@ -417,28 +318,26 @@ const Incidents = () => {
                   expandIconPosition="left"
                   key={incident.incident_id}
                 >
-                  <div className="collapse-content">
-                    <p className="collapse-content-p">{incident.description}</p>
-                    <div className="bottom-container">
-                      <Popover
-                        content={sourceListHelper(incident?.src)}
-                        placement="rightTop"
+                  <p className="collapse-content-p">{incident.description}</p>
+                  <div className="bottom-container">
+                    <Popover
+                      content={sourceListHelper(incident?.src)}
+                      placement="rightTop"
+                    >
+                      <Button
+                        type="primary"
+                        style={{
+                          backgroundColor: '#003767',
+                          border: 'none',
+                        }}
                       >
-                        <Button
-                          type="primary"
-                          style={{
-                            backgroundColor: '#003767',
-                            border: 'none',
-                          }}
-                        >
-                          Sources
-                        </Button>
-                      </Popover>
-                      <div className="tags-container">
-                        {incident.tags.map(i => {
-                          return <Tag key={i}>{i}</Tag>;
-                        })}
-                      </div>
+                        Sources
+                      </Button>
+                    </Popover>
+                    <div className="tags-container">
+                      {incident.tags.map(i => {
+                        return <Tag key={i}>{i}</Tag>;
+                      })}
                     </div>
                   </div>
                 </Panel>

@@ -468,28 +468,9 @@ div.timeline-container {
   border: none;
 }
 
-.ant-collapse-content-box {
-  background-color: #C1D2E9;
-  overflow: auto;
-}
-
 .incident-content {
   height: 50vh;
   z-index: 1;
-}
-
-div.ant-collapse-header {
-  padding: 4;
-  text-align: center;
-  padding-bottom: 4%;
-}
-
-div.ant-collapse > .ant-collapse-item > .ant-collapse-header {
-  padding: 8px;
-  font-size: 1rem;
-  text-align: left;
-  font-weight: 400;
-  color: #212529;
 }
 
 .incident-container {
