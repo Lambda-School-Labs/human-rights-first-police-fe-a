@@ -54,7 +54,10 @@ export const applyEdits = (oktaAxios, formValues, incident) => {
   const newDate = `${year}-${month}-${day}T${time}`;
   const updatedIncident = {
     ...formValues,
-    tags: formValues.tags.split(',').map(t => t.trim()).sort(),
+    tags: formValues.tags
+      .split(',')
+      .map(t => t.trim())
+      .sort(),
     incident_date: newDate,
   };
   const putRequest = new Promise((resolve, reject) => {

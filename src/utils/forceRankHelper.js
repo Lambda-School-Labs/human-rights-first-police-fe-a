@@ -1,4 +1,3 @@
-
 const forceRanks = [
   'Rank 0 - No Police Presence',
   'Rank 1 - Officer Presence',
@@ -19,13 +18,16 @@ export function getDescriptiveRank(rank) {
     return '';
   }
 
-  const rankValue = rank.toString().trim().split(" ").slice(-1);
+  const rankValue = rank
+    .toString()
+    .trim()
+    .split(' ')
+    .slice(-1);
   const rankIndex = parseInt(rankValue);
 
   if (rankIndex >= 0 && rankIndex <= 5) {
     return forceRanks[rankIndex];
-  }
-  else {
+  } else {
     return rank.toString();
   }
 }

@@ -18,8 +18,8 @@ const props = {
     title: 'Example',
     desc: 'Example',
     date: '2000-01-01T06:00:00.000Z',
-    force_rank: "Rank 4",
-    tags: ['test', 'testing', 'tests']
+    force_rank: 'Rank 4',
+    tags: ['test', 'testing', 'tests'],
   },
   formattedDate: null,
   unapprovedIncidents: [],
