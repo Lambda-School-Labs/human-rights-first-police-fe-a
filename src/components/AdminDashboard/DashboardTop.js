@@ -9,10 +9,10 @@ const DashboardTop = props => {
   } = props;
   return (
     <div>
-      {listType === 'unapproved' && (
+      {listType === 'pending' && (
         <h2 id="admin-dashboard-title">
           {' '}
-          Unapproved Incidents: {unapprovedIncidents.length}
+          Pending Incidents: {unapprovedIncidents.length}
         </h2>
       )}
       {listType === 'approved' && (

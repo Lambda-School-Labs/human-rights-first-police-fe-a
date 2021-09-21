@@ -1,50 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Space, Divider } from 'antd';
-import axios from 'axios';
-import { getData } from '../../../utils/DashboardHelperFunctions';
+import React, { useEffect, useState } from 'react';
+import { Table } from 'antd';
 import CompleteIncident from '../CompleteIncident';
 import { DateTime } from 'luxon';
 
 //https://ant.design/components/table/ <---documentation on the table
 
+/**
+ * @typedef AntTableProps
+ * @property {any[]} incidents - incident data
+ * @property {number[]} selectedIds - an aray of the currently selected incident IDs
+ * @property {React.Dispatch<React.SetStateAction<number[]>} setSelectedIds - setter for selected IDs
+ * @property {boolean} showConfidence - shows a column for incident confidence
+ */
+
+/**
+ * Component for rendering a list of incident data on the AdminDashboard
+ *
+ * @param {AntTableProps} props
+ * @returns {JSX.Element} the AntTable component
+ */
 function AntTable(props) {
-  const [incidents, setIncidents] = useState([]);
-  const [selectionType, setSelectionType] = useState('checkbox');
-  const [approvedSelected, setApprovedSelected] = useState([]);
-  const {
-    unapprovedIncidents,
-    setUnapprovedIncidents,
-    approvedIncidents,
-    formResponses,
-    selected,
-    setSelected,
-    setCurrList,
-  } = props;
-  function formattingDate(inputData) {
-    const [year, month, day] = inputData.incident_date.split('-');
-    return `${month}/${day.slice(0, 2)}/${year}`;
+  const { selectedIds, setSelectedIds, incidents, showConfidence } = props;
+
+  const [selectedRows, setSelectedRows] = useState([]);
+
+  // formats the date in the table
+  function renderDate(date) {
+    return DateTime.fromISO(date)
+      .plus({ days: 1 })
+      .toLocaleString(DateTime.DATETIME_MED);
   }
 
   const onSelect = selectedIncidents => {
-    if (selected !== undefined) {
-      setSelected(selectedIncidents);
+    if (setSelectedIds !== undefined) {
+      setSelectedIds(selectedIncidents);
     } else {
-      setApprovedSelected(selectedIncidents);
+      setSelectedRows(selectedIncidents);
     }
   };
+
   const columns = [
-    //   //When DS provides data for this, uncomment for Admin Table to show %, and move.
-    // {
-    //   title: 'Accuracy Estimate',
-    //   dataIndex: 'acc_estimate',
-    //     key: 'acc_estimate',
-    //     },
     {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
       fixed: 'top',
+      width: '50%'
     },
     {
       title: 'City',
@@ -71,48 +73,47 @@ function AntTable(props) {
 
         return aTime - bTime;
       },
+      render: renderDate
     },
   ];
 
-  // provides which list of data to used based on props passed when button on the admin is pressed
-  let listToUse = [];
-  if (unapprovedIncidents) {
-    listToUse = unapprovedIncidents;
-    setCurrList(unapprovedIncidents);
-  } else if (approvedIncidents) {
-    listToUse = approvedIncidents;
-  } else {
-    listToUse = formResponses;
-    setCurrList(formResponses);
+  if (showConfidence) {
+    const confidenceColumn = {
+      title: 'Confidence',
+      dataIndex: 'confidence',
+      key: 'confidence',
+      render: c => `${(c * 100).toFixed(3)}%`,
+    };
+
+    // Juggling columns to insert confidence column
+    const date = columns.pop();
+    columns.push(confidenceColumn);
+    columns.push(date);
   }
 
   return (
     <div>
       <Table
         columns={columns}
-        dataSource={listToUse}
+        dataSource={incidents}
         rowKey={'incident_id'}
         expandable={{
           expandedRowRender: incident => {
             incident.src = Object.values(incident.src); //changes structure of payload returned from initial GET request to match other listTypes' payload structure
             incident.tags = Object.values(incident.tags); //changes structure of payload returned from initial GET request to match other listTypes' payload structure
             return (
-              <CompleteIncident
-                incident={incident}
-                formattedDate={formattingDate(incident)}
-                setUnapprovedIncidents={setUnapprovedIncidents}
-              />
+              <CompleteIncident incident={incident} />
             );
           },
           rowExpandable: data => data.id !== null,
         }}
         rowSelection={{
-          selectedRowKeys: selected !== undefined ? selected : approvedSelected,
+          selectedRowKeys: selectedIds !== undefined ? selectedIds : selectedRows,
           onChange: onSelect,
         }}
         pagination={{
-          position: ['topRight', 'bottomCenter'],
-          total: listToUse ? listToUse.length : 0,
+          position: ['bottomCenter', 'topRight'],
+          total: incidents ? incidents.length : 0,
           showTotal(total, range) {
             return `${range[0]}-${range[1]} of ${total} items`;
           },

@@ -146,7 +146,6 @@ const AddIncident = props => {
       setVisible(false);
       setConfirmLoading(false);
       setAdding(false);
-      setPageNumber(1);
     }, 1750);
   };
 

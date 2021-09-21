@@ -469,7 +469,7 @@ div.timeline-container {
 }
 
 .ant-collapse-content-box {
-  background-color: #C1D2E9;
+  background-color: #c1d2e9;
   overflow: auto;
 }
 
@@ -833,12 +833,12 @@ form label {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  width: 22%;
+  align-items: center;
+  width: 30%;
 }
 
 .dashboard-top-approve-reject button {
   margin: auto 2%;
-  width: 45%;
 }
 
 .approve-reject-select {
@@ -1113,7 +1113,6 @@ form label {
 /*# sourceMappingURL=index.css.map */
 /* time line red circle designs*/
 
-
 @media only screen and (max-width: 1024px) {
   .entry .title:before {
     right: -11px;
@@ -1144,7 +1143,7 @@ form label {
 
 @media only screen and (max-width: 425px) {
   .entry .title:before {
-    left: 3px !important; 
+    left: 3px !important;
     border: 2px transparent;
   }
-} 
+}
