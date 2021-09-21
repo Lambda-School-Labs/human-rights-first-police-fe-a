@@ -50,10 +50,10 @@ export default function IncidentFocusCard({ id, zoomOnCluster }) {
 
       {incident?.categories
         ? incident.categories.map(cat => (
-          <Tag key={nanoid()}>
-            {cat.charAt(0).toUpperCase() + cat.slice(1).replaceAll('-', ' ')}
-          </Tag>
-        ))
+            <Tag key={nanoid()}>
+              {cat.charAt(0).toUpperCase() + cat.slice(1).replaceAll('-', ' ')}
+            </Tag>
+          ))
         : ''}
       <MapIncidentInfo className="map-incident-info">
         <p className="incident-description">{incident?.desc}</p>
